@@ -1,18 +1,16 @@
 Project title
 Lae Urban Youths Bike Workshop
 
-
-
 Purpose
 The same three-page site from Assessment 2, restyled with a hand-written CSS3 design system and made fully responsive. Visitors can learn about the workshop, browse services/course prices, check hours, and book via the form.
 
 Target audience
-Local adult riders, parents of young riders, students and budget-consciouscommuters in the Riverton area.
+Local adult riders, parents of young riders, students and budget-conscious commuters in the Lae Urban area.
 
 Responsive design
 Mobile-first: base styles target \~320–480 px; all media queries are min-width.
 Breakpoints: 40em (\~640 px, tablet), 56em (\~896 px, desktop),72em (\~1152 px, wide). Em-based so they track user font-size zoom.
-Mobile changes are structural, not just shrink-to-fit: the nav stacks thenbecomes a row; card grids reflow from 1 → 2 → 3+ columns; the contact formand info sidebar sit side by side only on wide screens; wide tables scrollhorizontally inside .table-wrap instead of squashing.
+Mobile changes are structural, not just shrink-to-fit: the nav stacks then becomes a row; card grids reflow from 1 → 2 → 3+ columns; the contact form and info sidebar sit side by side only on wide screens; wide tables scroll horizontally inside .table-wrap instead of squashing.
 Flexbox usage (one-dimensional layout)
 body flex column → sticky footer on short pages.
 .header-inner → responsive nav bar: stacked/centred on mobile, brand-left/nav-right row from 40em.
@@ -22,13 +20,13 @@ CSS Grid usage (two-dimensional layout)
 .media-split → home intro: text column + explicitly placed figure column.
 .split.contact-split → booking form (1.4fr) beside info sidebar (1fr) at 72em.
 .footer-grid → three aligned footer columns on wide screens.
-.grid-2 → two-column "Your details" form fields (legend kept outside thegrid intentionally — fieldset-as-grid breaks legends in some browsers).
+.grid-2 → two-column "Your details" form fields (legend kept outside the grid intentionally — field set-as-grid breaks legends in some browsers).
 Design system
 :root custom properties define the colour palette (WCAG AA-checked),fluid clamp() type scale, spacing scale, radii, shadows, container width,easing tokens. Georgia/serif display headings + system sans body — no webfonts.
 
 File list
 index.html, services.html, contact.html
-css/style.css — single organised stylesheet (tokens → reset → type →layout → components → utilities → media queries → a11y). Kept as one filebecause the project is small enough that a base/layout split would add asecond request without improving clarity.
+css/style.css — single organised stylesheet (tokens → reset → type →layout → components → utilities → media queries → a11y). Kept as one file because the project is small enough that a base/layout split would add a second request without improving clarity.
 images/ — workshop-benches(-480/-1400).jpg, course-participant.jpg,donated-bikes.jpg, workshop-entrance.jpg
 Technologies used
 HTML5, hand-written CSS3 (Flexbox, Grid, custom properties, clamp/minmax,media queries). No JavaScript, no frameworks, no page builders.
