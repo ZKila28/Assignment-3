@@ -1,0 +1,830 @@
+/* ==========================================================================
+   Riverton Community Bike Workshop — Assessment 3 stylesheet
+   Hand-written vanilla CSS3. Mobile-first. No frameworks, no preprocessor.
+   Pairs with the A2 semantic markup (A3 only adds class hooks).
+
+   CONTENTS
+   01. Design tokens (:root custom properties)
+   02. Reset & base
+   03. Typography
+   04. Layout (page shell, grids, splits)
+   05. Components (header/nav, cards, buttons, panels, figures, tables, forms, footer)
+   06. Utilities
+   07. Media queries — all breakpoints, mobile-first (min-width)
+   08. Accessibility: focus states & motion preferences
+
+   BREAKPOINT INDEX (em-based so they respect user font-size zoom)
+   - 40em (~640px)  tablet:  header becomes a row, 2-col form fields, card grids flow
+   - 56em (~896px)  desktop: media splits, footer columns
+   - 72em (~1152px) wide:    contact form + sidebar split
+   NOTE: CSS variables cannot be used inside media query conditions, so
+   breakpoints are documented here as tokens: --bp-tablet / --bp-desktop / --bp-wide.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   01. DESIGN TOKENS
+   One place to change the whole look. Every value below is consumed
+   elsewhere via var(), so restyling the site means editing this block.
+   -------------------------------------------------------------------------- */
+:root {
+  /* Colour palette — all text/background pairs meet WCAG AA (4.5:1) */
+  --clr-primary:       #1f6f43;  /* brand green: 6.1:1 on white  */
+  --clr-primary-dark:  #14512f;  /* headings, footer bg          */
+  --clr-primary-light: #e7f0e9;  /* tint for table rows, chips   */
+  --clr-accent:        #d97b29;  /* decorative only (borders)    */
+  --clr-accent-dark:   #8a4210;  /* accent as text: 7.3:1 white  */
+  --clr-surface:       #ffffff;  /* page sheet                   */
+  --clr-surface-alt:   #f4f1ea;  /* warm cream body background   */
+  --clr-text:          #23231f;  /* body text                    */
+  --clr-muted:         #5c5c54;  /* secondary text: 6.7:1 white  */
+  --clr-border:        #ddd6c6;
+  --clr-border-strong: #a49d8b;  /* form control borders         */
+  --clr-danger:        #a33a2a;  /* :user-invalid feedback       */
+  --clr-focus:         #14512f;  /* focus ring on light surfaces */
+  --clr-focus-on-dark: #ffd166;  /* focus ring on green surfaces */
+
+  /* Typography */
+  --font-body:    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: Georgia, "Times New Roman", Times, serif;
+  /* Fluid type scale: clamp(min, preferred + viewport growth, max) */
+  --fs-small: clamp(0.85rem, 0.83rem + 0.1vw, 0.95rem);
+  --fs-body:  clamp(1rem,   0.96rem + 0.25vw, 1.125rem);
+  --fs-lead:  clamp(1.1rem, 1.05rem + 0.4vw, 1.3rem);
+  --fs-h3:    clamp(1.15rem, 1.1rem + 0.35vw, 1.35rem);
+  --fs-h2:    clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --fs-h1:    clamp(2rem,   1.55rem + 2.2vw, 2.9rem);
+  --lh-tight: 1.2;
+  --lh-body:  1.65;
+  --fw-normal: 400;
+  --fw-mid:    600;
+  --fw-bold:   700;
+
+  /* Spacing scale — consistent vertical rhythm */
+  --space-2xs: 0.25rem;
+  --space-xs:  0.5rem;
+  --space-s:   0.75rem;
+  --space-m:   1rem;
+  --space-l:   1.5rem;
+  --space-xl:  2.25rem;
+  --space-2xl: 3.5rem;
+
+  /* Shape & depth */
+  --radius-sm: 0.3rem;
+  --radius-md: 0.6rem;
+  --radius-lg: 1.1rem;
+  --shadow-sm: 0 1px 3px rgba(35, 35, 31, 0.12);
+  --shadow-md: 0 4px 12px rgba(35, 35, 31, 0.14);
+  --shadow-lg: 0 10px 26px rgba(35, 35, 31, 0.18);
+
+  /* Layout */
+  --container: 72rem;   /* max content width */
+  --measure:   68ch;    /* comfortable reading length for prose */
+
+  /* Motion */
+  --speed: 160ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   02. RESET & BASE
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Strip default margins/padding; spacing is re-applied deliberately in §03–05 */
+body,
+h1, h2, h3, h4, p,
+figure, blockquote,
+ul, ol,
+fieldset, legend {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/*
+  FLEXBOX DECISION #1 — sticky footer.
+  body is a flex COLUMN: header / main / footer stack, and main gets
+  flex-grow so short pages (e.g. services) still push the footer to the
+  bottom of the viewport. This is the canonical one-dimensional flex use.
+*/
+body {
+  min-height: 100vh;   /* fallback */
+  min-height: 100svh;  /* small-viewport units for mobile browser chrome */
+  display: flex;
+  flex-direction: column;
+  background: var(--clr-surface-alt);
+  color: var(--clr-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+main {
+  flex: 1 0 auto;      /* grows to fill leftover space */
+  width: 100%;
+}
+
+/* Responsive images: never overflow their container, keep intrinsic ratio */
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form controls inherit the page font instead of browser defaults */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Anchored sections stop just short of the viewport edge when jumped to */
+[id] {
+  scroll-margin-top: 1.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   03. TYPOGRAPHY
+   Serif display headings + sans body: an editorial pairing that suits a
+   friendly community organisation, with zero webfont downloads.
+   -------------------------------------------------------------------------- */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--clr-primary-dark);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-bold);
+}
+
+h1 {
+  font-size: var(--fs-h1);
+  margin-block-end: var(--space-s);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  margin-block: var(--space-xl) var(--space-s);
+}
+
+/* Short accent underline instead of a full-width rule — echoes the
+   card top-borders and unifies the heading system */
+h2::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 0.2rem;
+  margin-top: 0.45rem;
+  border-radius: var(--radius-sm);
+  background: var(--clr-accent);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  margin-block: var(--space-l) var(--space-xs);
+}
+
+p {
+  margin-block-end: var(--space-s);
+  max-width: var(--measure);
+}
+
+.lead {
+  font-size: var(--fs-lead);
+  color: var(--clr-muted);
+  max-width: 60ch;
+  margin-block-end: var(--space-l);
+}
+
+/* Content lists (nav lists opt out via their own class) */
+main :where(ul, ol) {
+  padding-left: 1.4rem;
+  margin-block-end: var(--space-m);
+}
+
+main li {
+  margin-block: var(--space-2xs);
+}
+
+/* Green step numbers: small detail that reinforces the palette */
+main ol li::marker {
+  color: var(--clr-primary);
+  font-weight: var(--fw-bold);
+}
+
+/* Links: always underlined (not colour alone), thicker on hover */
+a {
+  color: var(--clr-primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--clr-primary-dark);
+  text-decoration-thickness: 2px;
+}
+
+address {
+  font-style: normal;
+}
+
+/* --------------------------------------------------------------------------
+   04. LAYOUT
+   -------------------------------------------------------------------------- */
+
+/* Width constraint used by header, main and footer alike */
+.container {
+  width: min(100% - 2 * var(--space-m), var(--container));
+  margin-inline: auto;
+}
+
+/* The white "sheet" the content sits on, floating over the cream body */
+.page {
+  background: var(--clr-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: clamp(1.25rem, 4vw, 3.5rem);
+  margin-block: var(--space-m) var(--space-2xl);
+}
+
+/*
+  CSS GRID DECISION #1 — .card-grid (auto-fit + minmax).
+  Two-dimensional card rows for "What we do", "Get involved" and the
+  services jump-nav. minmax(min(100%, 16rem), 1fr) means: each card is at
+  least 16rem (or full width on tiny screens), and as many columns as fit
+  are created automatically — no per-breakpoint column math needed.
+  Full-width children (h2, trailing p) span all columns via 1 / -1.
+*/
+.card-grid {
+  display: grid;
+  gap: var(--space-m);
+}
+
+.card-grid > h2,
+.card-grid > p {
+  grid-column: 1 / -1;
+}
+
+/*
+  CSS GRID DECISION #2 — .media-split (home "Who we are").
+  Text and figure share one grid; on desktop the figure occupies column 2
+  across the text rows, giving a true two-dimensional editorial layout.
+  The figure spans 3 rows because the section has 3 paragraphs — if you
+  add/remove paragraphs, adjust grid-row: 2 / span N to match.
+*/
+.media-split {
+  display: grid;
+  gap: var(--space-m) var(--space-l);
+}
+
+/*
+  CSS GRID DECISION #3 — .split (contact page).
+  Form (main task) and info sidebar (supporting task) as explicit grid
+  columns from 72em; they stack in source order on smaller screens, so
+  mobile users reach the form first without reordering the HTML.
+*/
+.split {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.contact-aside {
+  display: grid;
+  gap: var(--space-l);
+}
+
+/* --------------------------------------------------------------------------
+   05. COMPONENTS
+   -------------------------------------------------------------------------- */
+
+/* ---- Skip link ---- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 100;
+  background: var(--clr-primary-dark);
+  color: #ffffff;
+  padding: var(--space-xs) var(--space-m);
+  border-radius: 0 0 var(--radius-sm) 0;
+}
+
+.skip-link:focus {
+  left: 0;
+  top: 0;
+}
+
+/* ---- Header & navigation ---- */
+.site-header {
+  background: linear-gradient(160deg, var(--clr-primary), var(--clr-primary-dark));
+  border-bottom: 0.3rem solid var(--clr-accent);
+  padding-block: var(--space-s);
+  color: #ffffff;
+}
+
+/*
+  FLEXBOX DECISION #2 — responsive nav bar.
+  .header-inner is a flex container. Mobile-first default: column, centred
+  (brand above wrapped links). At 40em it switches to row + space-between,
+  so the SAME markup yields stacked mobile nav / horizontal desktop nav.
+  FLEXBOX handles this because a nav bar is one-dimensional alignment.
+*/
+.header-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.brand a {
+  display: flex;              /* flex row: icon + text baseline-aligned */
+  align-items: center;
+  gap: var(--space-xs);
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: var(--fs-lead);
+  font-weight: var(--fw-bold);
+}
+
+.brand-mark {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  color: var(--clr-accent);
+}
+
+.site-nav ul {
+  display: flex;              /* flex row of links that wraps when crowded */
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xs);
+  list-style: none;
+}
+
+.site-nav a {
+  display: inline-block;
+  padding: 0.55em 1.1em;      /* generous tap targets for touch users */
+  border-radius: var(--radius-sm);
+  color: #eaf4ee;
+  text-decoration: none;
+  font-weight: var(--fw-mid);
+}
+
+.site-nav a:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+/* Current page chip inverts: white pill, dark green text */
+.site-nav a[aria-current="page"] {
+  background: var(--clr-surface);
+  color: var(--clr-primary-dark);
+}
+
+/* ---- Cards ---- */
+.card {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-top: 0.25rem solid var(--clr-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-m) var(--space-l);
+}
+
+.card h3 {
+  margin-block: 0 var(--space-xs);
+}
+
+.card p {
+  font-size: var(--fs-small);
+  color: var(--clr-text);
+  margin-block-end: 0;
+}
+
+/* Whole card as a link (services jump-nav) */
+.card--link {
+  border-top-color: var(--clr-accent);   /* accent = "this one navigates" */
+  text-decoration: none;
+  transition: transform var(--speed) var(--ease-out),
+              box-shadow var(--speed) var(--ease-out);
+}
+
+.card--link:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.card--link:hover .card-title {
+  color: var(--clr-accent-dark);
+  text-decoration: underline;
+}
+
+.card-title {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-h3);
+  color: var(--clr-primary-dark);
+}
+
+.card-desc {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--fs-small);
+  color: var(--clr-muted);
+}
+
+/* Jump-nav spacing */
+.page-contents {
+  margin-block-end: var(--space-l);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-block;
+  padding: 0.7em 1.5em;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--speed) var(--ease-out),
+              color var(--speed) var(--ease-out);
+}
+
+.btn--primary {
+  background: var(--clr-primary);
+  color: #ffffff;
+}
+
+.btn--primary:hover {
+  background: var(--clr-primary-dark);
+  color: #ffffff;
+}
+
+.btn--outline {
+  background: transparent;
+  border-color: var(--clr-primary);
+  color: var(--clr-primary-dark);
+}
+
+.btn--outline:hover {
+  background: var(--clr-primary-light);
+  color: var(--clr-primary-dark);
+}
+
+/* ---- Panels & callouts ---- */
+.panel {
+  background: var(--clr-surface-alt);
+  border: 1px solid var(--clr-border);
+  border-left: 0.35rem solid var(--clr-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-m) var(--space-l);
+}
+
+.panel--accent {
+  border-left-color: var(--clr-accent);
+}
+
+/* Panels/cards: cancel the flow margins at their edges */
+.panel > :first-child,
+.card > :first-child {
+  margin-block-start: 0;
+}
+
+.panel > :last-child,
+.card > :last-child {
+  margin-block-end: 0;
+}
+
+/* ---- Figures & media ---- */
+figure {
+  margin-block: var(--space-m) var(--space-l);
+}
+
+/* Uniform 3:2 frames: object-fit crops whatever photo the student drops in */
+figure img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--clr-border);
+  box-shadow: var(--shadow-sm);
+}
+
+figcaption {
+  margin-top: var(--space-xs);
+  font-size: var(--fs-small);
+  font-style: italic;
+  color: var(--clr-muted);
+}
+
+/* ---- Tables ---- */
+
+/* Wrapper gives wide tables a horizontal scroll escape hatch on phones */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  margin-block: var(--space-m) var(--space-l);
+}
+
+.table-wrap table {
+  width: 100%;
+  min-width: 38rem;   /* forces scroll (not squish) below ~38rem viewports */
+  border-collapse: collapse;
+}
+
+caption {
+  text-align: left;
+  font-weight: var(--fw-bold);
+  color: var(--clr-primary-dark);
+  padding: var(--space-xs) var(--space-s);
+}
+
+th,
+td {
+  border: 1px solid var(--clr-border);
+  padding: 0.55em 0.8em;
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: var(--clr-primary);
+  color: #ffffff;
+}
+
+tbody th {
+  background: var(--clr-primary-light);
+}
+
+tbody tr:nth-child(even) td {
+  background: #faf8f2;
+}
+
+/* ---- Forms ---- */
+fieldset {
+  border: 1px solid var(--clr-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-s) var(--space-m) var(--space-m);
+  margin-block-end: var(--space-l);
+}
+
+legend {
+  font-weight: var(--fw-bold);
+  color: var(--clr-primary-dark);
+  padding-inline: var(--space-2xs);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.55em 0.75em;
+  border: 1px solid var(--clr-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--clr-surface);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* Native control tint (checkboxes, radios, date picker) */
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--clr-primary);
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Radio/checkbox rows: FLEXBOX — keeps control and multi-line label
+   aligned on one axis regardless of label length */
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  margin-block: var(--space-xs);
+}
+
+.option input {
+  margin-top: 0.3em;   /* optically aligns with the label's first line */
+}
+
+.option label {
+  font-weight: var(--fw-normal);
+}
+
+label {
+  display: block;
+  font-weight: var(--fw-bold);
+  margin-block-end: var(--space-2xs);
+}
+
+.hint {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-normal);
+  color: var(--clr-muted);
+}
+
+/* Progressive enhancement: style a field only AFTER the user has typed
+   in it (better than :invalid, which fires on page load) */
+:user-invalid {
+  border: 2px solid var(--clr-danger);
+}
+
+/* ---- Footer ---- */
+.site-footer {
+  background: var(--clr-primary-dark);
+  color: #dfe9e1;
+  padding-block: var(--space-xl);
+  font-size: var(--fs-small);
+}
+
+/*
+  CSS GRID DECISION #4 — .footer-grid.
+  Mobile: single column, centred. Wide: three aligned columns (contact /
+  links / meta) whose tops line up — exactly what Grid's shared rows are
+  for. Flexbox could fake this with fixed widths, but Grid expresses the
+  column alignment intent directly.
+*/
+.footer-grid {
+  display: grid;
+  gap: var(--space-m);
+  justify-items: center;
+  text-align: center;
+}
+
+.site-footer a {
+  color: #cfe6d8;
+}
+
+.site-footer a:hover {
+  color: #ffffff;
+}
+
+/*
+  FLEXBOX DECISION #3 — footer link row wraps gracefully instead of
+  pushing the column wider.
+*/
+.footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-m);
+  list-style: none;
+}
+
+.footer-meta .to-top {
+  font-weight: var(--fw-mid);
+}
+
+.footer-meta small {
+  display: block;
+  margin-top: var(--space-xs);
+  color: #b9cfc0;
+}
+
+/* --------------------------------------------------------------------------
+   06. UTILITIES
+   -------------------------------------------------------------------------- */
+
+/* Span every grid column (used by the phone field inside .grid-2) */
+.u-span-2 {
+  grid-column: 1 / -1;
+}
+
+/* --------------------------------------------------------------------------
+   07. MEDIA QUERIES — mobile-first, all min-width
+   Every structural change between breakpoints lives here so the responsive
+   story of the site can be read top to bottom.
+   -------------------------------------------------------------------------- */
+
+/* ===== TABLET: 40em (~640px) and up ===== */
+@media (min-width: 40em) {
+
+  /* Flexbox: brand and nav share one baseline row, space-between pushes
+     the nav to the right edge. Wraps if the brand text runs long. */
+  .header-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .site-nav ul {
+    justify-content: flex-end;
+  }
+
+  /* Grid: name + email fields sit side by side; phone spans both (.u-span-2).
+     Two-dimensional because rows AND columns are managed together. */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-l);
+  }
+
+  /* Grid: card rows start flowing into multiple columns; auto-fit picks
+     2-up on tablet and 3-up on desktop without further rules. */
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--space-l);
+  }
+}
+
+/* ===== DESKTOP: 56em (~896px) and up ===== */
+@media (min-width: 56em) {
+
+  /* Grid: text (3fr) and photo (2fr) columns; the figure is explicitly
+     placed in column 2 across the paragraph rows (see §04 comment). */
+  .media-split {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
+
+  .media-split > h2 {
+    grid-column: 1 / -1;
+  }
+
+  .media-split > figure {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+  }
+
+  /* Grid: footer becomes three aligned columns, left-aligned text */
+  .footer-grid {
+    grid-template-columns: 1.2fr 1fr 1.2fr;
+    justify-items: start;
+    text-align: left;
+    gap: var(--space-xl);
+  }
+
+  .footer-nav ul {
+    justify-content: flex-start;
+  }
+}
+
+/* ===== WIDE: 72em (~1152px) and up ===== */
+@media (min-width: 72em) {
+
+  /* Grid: the day's primary task (form) gets ~58% width; the hours table,
+     map info and contact list sit beside it as a persistent sidebar.
+     minmax(0, …) prevents the wide table from blowing out the track. */
+  .contact-split {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   08. ACCESSIBILITY: FOCUS STATES & MOTION PREFERENCES
+   -------------------------------------------------------------------------- */
+
+/* :focus-visible rings appear for KEYBOARD focus only (not mouse clicks),
+   are 3px thick, offset from the element, and AA-contrast against the
+   surface behind them. */
+:focus-visible {
+  outline: 3px solid var(--clr-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-2xs, 2px);
+}
+
+/* On green surfaces the dark-green ring would vanish — swap to amber,
+   which contrasts with both the header gradient and the footer. */
+.site-header :focus-visible,
+.site-footer :focus-visible {
+  outline-color: var(--clr-focus-on-dark);
+}
+
+/* Respect users who turn off animations at the OS level */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
