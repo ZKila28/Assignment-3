@@ -4,7 +4,7 @@ Lae Urban Youths Bike Workshop
 
 
 Purpose
-The same three-page site from Assessment 2, restyled with a hand-writtenCSS3 design system and made fully responsive. Visitors can learn about theworkshop, browse services/course prices, check hours, and book via the form.
+The same three-page site from Assessment 2, restyled with a hand-written CSS3 design system and made fully responsive. Visitors can learn about the workshop, browse services/course prices, check hours, and book via the form.
 
 Target audience
 Local adult riders, parents of young riders, students and budget-consciouscommuters in the Riverton area.
@@ -37,5 +37,5 @@ How to run
 Open index.html locally, or publish via GitHub Pages.
 
 AI Use Declaration
-This project was developed with substantial assistance from chat.z.ai, a generative AI conversational assistant. AI was used to draft the HTML, CSS and JavaScript code, the page content, and supporting documentation (README, summary, testing plan). My own contribution consisted of selecting and adding the photographic assets, validating and debugging the code with the W3C validators, performing all browser, responsive and accessibility testing, and studying the generated code until I could explain every design and accessibility decision.
+This project was developed with substantial assistance from chat.z.ai, a generative AI conversational assistant. AI was used to draft the HTML, CSS and JavaScript code, the page content, and supporting documentation (README). My own contribution consisted of selecting and adding the photographic assets, validating and debugging the code with the W3C validators, performing all browser, responsive and accessibility testing, and studying the generated code until I could explain every design and accessibility decision.
 
